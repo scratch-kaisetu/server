@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サーバー稼働状況</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .status-message {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .status-container {
+            margin: 0 auto;
+            text-align: left;
+            width: 600px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+        .status-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        .online {
+            color: green;
+        }
+        .offline {
+            color: red;
+        }
+        .timestamp {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>サーバー稼働状況</h1>
+
+<p class="status-message" id="status-message">読み込み中...</p>
+
+<div class="status-container">
+    <div class="status-item">
+        <span id="proxy-icon" class="status-icon">⏳</span>
+        <span id="proxy-status">プロキシサーバー: 読み込み中...</span>
+    </div>
+    <div class="status-item">
+        <span id="kai-icon" class="status-icon">⏳</span>
+        <span id="kai-status">かい鯖: 読み込み中...</span>
+    </div>
+    <div class="status-item">
+        <span id="bacon-icon" class="status-icon">⏳</span>
+        <span id="bacon-status">ベーコン鯖: 読み込み中...</span>
+    </div>
+</div>
+
+<p class="timestamp" id="last-checked">読み込み中...</p>
+
+<script>
+    // JSONファイルのパス
+    const STATUS_FILE = 'server_status.json';
+
+    // サーバーステータスを読み込んで表示する関数
+    function loadStatus() {
+        fetch(STATUS_FILE)
+            .then(response => response.json())
+            .then(data => {
+                // タイムスタンプ表示の更新
+                document.getElementById('last-checked').innerText = `${data.last_checked} 現在の稼働状況`;
+
+                // 各サーバーのステータスを取得
+                const proxyOnline = data['プロキシサーバー'] === 'Online';
+                const kaiOnline = data['かい鯖'] === 'Online';
+                const baconOnline = data['ベーコン鯖'] === 'Online';
+
+                // アイコンとメッセージを更新
+                document.getElementById('proxy-icon').innerText = proxyOnline ? '✅' : '❌';
+                document.getElementById('proxy-status').innerText = `プロキシサーバー: ${proxyOnline ? '正常に稼働しています' : '現在停止しています'}`;
+                document.getElementById('proxy-icon').className = proxyOnline ? 'status-icon online' : 'status-icon offline';
+
+                document.getElementById('kai-icon').innerText = kaiOnline ? '✅' : '❌';
+                document.getElementById('kai-status').innerText = `かい鯖: ${kaiOnline ? '正常に稼働しています' : '現在停止しています'}`;
+                document.getElementById('kai-icon').className = kaiOnline ? 'status-icon online' : 'status-icon offline';
+
+                document.getElementById('bacon-icon').innerText = baconOnline ? '✅' : '❌';
+                document.getElementById('bacon-status').innerText = `ベーコン鯖: ${baconOnline ? '正常に稼働しています' : '現在停止しています'}`;
+                document.getElementById('bacon-icon').className = baconOnline ? 'status-icon online' : 'status-icon offline';
+
+                // 全体の稼働状況メッセージを更新
+                const allOnline = proxyOnline && kaiOnline && baconOnline;
+                document.getElementById('status-message').innerText = `${data.last_checked} 現在、${allOnline ? 'すべてのサーバーが正常に稼働しています' : '一部のサーバーがダウンしています'}`;
+            })
+            .catch(error => {
+                console.error('Error loading status:', error);
+            });
+    }
+
+    // ページが読み込まれたらステータスを読み込む
+    document.addEventListener('DOMContentLoaded', loadStatus);
+</script>
+
+</body>
+</html>
