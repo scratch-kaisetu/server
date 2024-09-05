@@ -50,19 +50,8 @@
 
 <p class="status-message" id="status-message">読み込み中...</p>
 
-<div class="status-container">
-    <div class="status-item">
-        <span id="proxy-icon" class="status-icon">⏳</span>
-        <span id="proxy-status">プロキシサーバー: 読み込み中...</span>
-    </div>
-    <div class="status-item">
-        <span id="kai-icon" class="status-icon">⏳</span>
-        <span id="kai-status">かい鯖: 読み込み中...</span>
-    </div>
-    <div class="status-item">
-        <span id="bacon-icon" class="status-icon">⏳</span>
-        <span id="bacon-status">ベーコン鯖: 読み込み中...</span>
-    </div>
+<div class="status-container" id="status-container">
+    <!-- サーバーステータスをここに動的に追加します -->
 </div>
 
 <p class="timestamp" id="last-checked">読み込み中...</p>
@@ -79,26 +68,41 @@
                 // タイムスタンプ表示の更新
                 document.getElementById('last-checked').innerText = `${data.last_checked} 現在の稼働状況`;
 
-                // 各サーバーのステータスを取得
-                const proxyOnline = data['プロキシサーバー'] === 'Online';
-                const kaiOnline = data['かい鯖'] === 'Online';
-                const baconOnline = data['ベーコン鯖'] === 'Online';
+                // サーバーステータスのコンテナ
+                const statusContainer = document.getElementById('status-container');
+                statusContainer.innerHTML = ''; // コンテナをクリア
 
-                // アイコンとメッセージを更新
-                document.getElementById('proxy-icon').innerText = proxyOnline ? '✅' : '❌';
-                document.getElementById('proxy-status').innerText = `プロキシサーバー: ${proxyOnline ? '正常に稼働しています' : '現在停止しています'}`;
-                document.getElementById('proxy-icon').className = proxyOnline ? 'status-icon online' : 'status-icon offline';
+                let allOnline = true;
 
-                document.getElementById('kai-icon').innerText = kaiOnline ? '✅' : '❌';
-                document.getElementById('kai-status').innerText = `かい鯖: ${kaiOnline ? '正常に稼働しています' : '現在停止しています'}`;
-                document.getElementById('kai-icon').className = kaiOnline ? 'status-icon online' : 'status-icon offline';
+                // サーバーごとにステータスを表示
+                Object.keys(data).forEach(server => {
+                    if (server === 'last_checked') return; // タイムスタンプは無視
 
-                document.getElementById('bacon-icon').innerText = baconOnline ? '✅' : '❌';
-                document.getElementById('bacon-status').innerText = `ベーコン鯖: ${baconOnline ? '正常に稼働しています' : '現在停止しています'}`;
-                document.getElementById('bacon-icon').className = baconOnline ? 'status-icon online' : 'status-icon offline';
+                    const isOnline = data[server] === 'Online';
+
+                    // サーバーのステータスアイテムを作成
+                    const statusItem = document.createElement('div');
+                    statusItem.classList.add('status-item');
+
+                    const statusIcon = document.createElement('span');
+                    statusIcon.classList.add('status-icon');
+                    statusIcon.innerText = isOnline ? '✅' : '❌';
+                    statusIcon.classList.add(isOnline ? 'online' : 'offline');
+
+                    const statusText = document.createElement('span');
+                    statusText.innerText = `${server}: ${isOnline ? '正常に稼働しています' : '現在停止しています'}`;
+
+                    statusItem.appendChild(statusIcon);
+                    statusItem.appendChild(statusText);
+
+                    statusContainer.appendChild(statusItem);
+
+                    if (!isOnline) {
+                        allOnline = false;
+                    }
+                });
 
                 // 全体の稼働状況メッセージを更新
-                const allOnline = proxyOnline && kaiOnline && baconOnline;
                 document.getElementById('status-message').innerText = `${data.last_checked} 現在、${allOnline ? 'すべてのサーバーが正常に稼働しています' : '一部のサーバーがダウンしています'}`;
             })
             .catch(error => {
